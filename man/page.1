@@ -43,12 +43,24 @@ If no STRINGS are provided, streams standard input.
     Display version information and exit.
 
 BUGS
-    The following command will never provide output:
+Any issues can be filed at:
+  
+  https://github.com/zeddidragon/zettsum/issues
 
-        echo -n test | zettsum
+1.
+  The following command will never provide output:
 
-    This is because zettsum waits for a new line before
-    writing output, and it is not considered a bug.
+    echo -n test | zettsum
+
+  This is because zettsum waits for a new line before
+  writing output, and it is not considered a bug.
+
+2.
+  I have no idea what the expected behaviour of the
+.I -e
+  option is or how to test it. If this is important to you,
+  and you know how to implement it correctly, please file an issue
+  or a pull request.
 
 .SH AUTHOR
 Written by Tony A. Saele and Oystein O. Olsen

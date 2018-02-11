@@ -2,6 +2,7 @@ const util = require('util')
 const assert = require('assert')
 const readline = require('readline')
 const {exec, spawn} = require('child_process')
+const config = require('../package.json')
 
 describe('zettsum', () => {
   it('does not crash', done => {
@@ -144,6 +145,62 @@ describe('zettsum', () => {
       const str = 'test'
       exec(`./bin/zettsum -d shullbit ${str}`, (err, stdout, stderr) => {
         assert.equal(stderr.trim(), 'Unsupported digest format: shullbit')
+        done()
+      })
+    })
+  })
+
+  describe('-e, --digest', () => {
+    it('reads a different encoding', done => {
+      const str = 'hellø'
+      // Generated using zettsum
+      const sum = '83f5941b668fede77b738609586ad8fe31730e864c529d78ee3d9e68b9ba712f'
+      exec(`echo ${str} | ./bin/zettsum -e latin1`, (err, stdout, stderr) => {
+        assert.equal(stdout.trim(), sum)
+        done()
+      })
+    })
+
+    it('provides a helpful error message on invalid format', done => {
+      const str = 'test'
+      exec(`./bin/zettsum -e shullbit ${str}`, (err, stdout, stderr) => {
+        assert.equal(stderr.trim(), 'Unsupported encoding format: shullbit')
+        done()
+      })
+    })
+  })
+
+  describe('-i, --input', () => {
+    it('displays the input line', done => {
+      const str = 'test'
+      // Generated using md5sum
+      const sum = '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08'
+      exec(`./bin/zettsum -i ${str}`, (err, stdout, stderr) => {
+        assert.equal(stdout.trim(), `${sum}\t${str}`)
+        done()
+      })
+    })
+  })
+
+  describe('-h, --help', () => {
+    it('displays the help', done => {
+      exec('./bin/zettsum -h', (err, stdout, stderr) => {
+        assert(/--algorithm/m.test(stdout), '--algorithm not found')
+        assert(/--hashes/m.test(stdout), '--hashes not found')
+        assert(/--digest/m.test(stdout), '--diges not found')
+        assert(/--encoding/m.test(stdout), '--encoding not found')
+        assert(/--input/m.test(stdout), '--input not found')
+        assert(/--help/m.test(stdout), '--help not found')
+        assert(/--version/m.test(stdout), '--version not found')
+        done()
+      })
+    })
+  })
+
+  describe('-v, --version', () => {
+    it('displays the version', done => {
+      exec('./bin/zettsum -v', (err, stdout, stderr) => {
+        assert.equal(stdout.trim(), config.version)
         done()
       })
     })
