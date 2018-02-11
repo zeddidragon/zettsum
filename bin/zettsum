@@ -87,7 +87,7 @@ if(!encodings.includes(encoding)) {
 }
 
 function hash(str) {
-  var hashed = crypto.createHash(algo).update(str, encoding).digest(digest)
+  let hashed = crypto.createHash(algo).update(str, encoding).digest(digest)
   if(showInput) hashed += '\t' + str
   return hashed
 }
@@ -102,11 +102,42 @@ process.stdout.on('error', process.exit)
 process.stdin.on('end', () => process.exit(0))
 process.stdin.setEncoding(encoding)
 
-let remainder = null
-process.stdin.on('data', data => {
-})
 const pipe = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
   terminal: false,
+})
+pipe.on('line', str => process.stdout.write(hash(str) + '\n'))
+
+let remainder = null
+const newLine = Buffer.from('\n', encoding)
+const tab = Buffer.from('\t', encoding)
+process.stdin.on('data', data => {
+  if(typeof data === 'string') return
+  if(!data) return process.exit(1)
+
+  let start = 0
+  let end = 0
+
+  const length = data.length
+  while(start < length) {
+    end = data.indexOf(newLine, start)
+    let slice = data.slice(start, end)
+    if(remainder) {
+      slice = Buffer.concat([remainder, slice])
+      remainder = null
+    }
+    if(end < 0) {
+      remainder = slice
+      return
+    }
+    const hash = crypto.createHash(algo).update(slice).digest(digest)
+    process.stdout.write(hash)
+    if(showInput) {
+      process.stdout.write(tab)
+      process.stdout.write(slice)
+    }
+    process.stdout.write(newLine)
+    start = end + 1
+  }
 })

@@ -42,5 +42,13 @@ If no STRINGS are provided, streams standard input.
 .B -v, --version
     Display version information and exit.
 
+BUGS
+    The following command will never provide output:
+
+        echo -n test | zettsum
+
+    This is because zettsum waits for a new line before
+    writing output, and it is not considered a bug.
+
 .SH AUTHOR
 Written by Tony A. Saele and Oystein O. Olsen

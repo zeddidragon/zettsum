@@ -1,3 +1,4 @@
+const util = require('util')
 const assert = require('assert')
 const readline = require('readline')
 const {exec, spawn} = require('child_process')
@@ -34,6 +35,65 @@ describe('zettsum', () => {
     exec(`./bin/zettsum ${strs.join(' ')}`, (err, stdout, stderr) => {
       assert.deepEqual(stdout.split('\n').filter(line => line), sums)
       done()
+    })
+  })
+
+  it('hashes piped input', done => {
+    const str = 'test'
+    // Generated using sha256sum
+    const sum = '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08'
+    exec(`echo ${str} | ./bin/zettsum`, (err, stdout, stderr) => {
+      assert.equal(stdout.trim(), sum)
+      done()
+    })
+  })
+
+  describe('when piped buffers', () => {
+    function assertEqual(proc, bufA, bufB) {
+      try {
+        assert(bufA.equals(bufB), `
+          Expected: ${util.inspect(bufA)}
+          Actual:   ${util.inspect(bufB)}
+        `)
+      } finally {
+        proc.kill('SIGINT')
+      }
+    }
+
+    it('hashes the input', done => {
+      const buf = Buffer.from('test\n')
+      // Generated using sha256sum
+      const sum = Buffer.from(
+        '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\n'
+      )
+      const proc = spawn('./bin/zettsum')
+      proc.stdout.on('data', data => {
+        assertEqual(proc, data, sum)
+        done()
+      })
+      proc.stdin.write(buf)
+    })
+
+    it('hashes staggered input', done => {
+      const chunk1 = Buffer.from('test1\nte')
+      const chunk2 = Buffer.from('st2\n')
+      // Generated using sha256sum
+      const sums = [
+        '1b4f0e9851971998e732078544c96b36c3d01cedf7caa332359d6f1d83567014\n',
+        '60303ae22b998861bce3b28f33eec1be758a213c86c93c076dbe9f558c11c752\n',
+      ].map(str => Buffer.from(str))
+      const proc = spawn('./bin/zettsum')
+      let i = 0
+      proc.stdout.on('data', data => {
+        assertEqual(proc, data, sums[i])
+        if(i === 0) {
+          i++
+          proc.stdin.write(chunk2)
+        } else {
+          done()
+        }
+      })
+      proc.stdin.write(chunk1)
     })
   })
 
@@ -78,27 +138,6 @@ describe('zettsum', () => {
         assert.equal(stdout.trim(), sum)
         done()
       })
-    })
-
-    it('provides a helpful error message on invalid format', done => {
-      const str = 'test'
-      exec(`./bin/zettsum -d shullbit ${str}`, (err, stdout, stderr) => {
-        assert.equal(stderr.trim(), 'Unsupported digest format: shullbit')
-        done()
-      })
-    })
-  })
-
-  describe('-e, --encoding', () => {
-    it('digests a different format', done => {
-      const buf = Buffer.from('test', 'ascii')
-      // Generated using openssl
-      const sum = 'n4bQgYhMfWWaL+qgxVrQFaO/TxsrC4Is0V1sFbDwCgg='
-      const child = spawn('./bin/zettsum', ['-e', 'ascii'])
-      child.stdout.on('data', outbuf => {
-        console.log(sum.toString())
-      })
-      child.stdin.write(buf)
     })
 
     it('provides a helpful error message on invalid format', done => {
