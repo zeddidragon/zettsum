@@ -96,6 +96,21 @@ describe('zettsum', () => {
       })
       proc.stdin.write(chunk1)
     })
+
+    it('also uses -i', done => {
+      const buf = Buffer.from('test\n')
+      // Generated using sha256sum
+      const result = Buffer.concat([
+        Buffer.from('9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\t'),
+        buf,
+      ])
+      const proc = spawn('./bin/zettsum', ['-i'])
+      proc.stdout.on('data', data => {
+        assertEqual(proc, data, result)
+        done()
+      })
+      proc.stdin.write(buf)
+    })
   })
 
   describe('-a, --algorithm', () => {
