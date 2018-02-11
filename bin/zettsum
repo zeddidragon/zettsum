@@ -1,0 +1,112 @@
+#!/usr/bin/env node
+const readline = require('readline')
+const crypto = require('crypto')
+const stream = require('stream')
+const path = require('path')
+const config = require('../package.json')
+
+const digests = ['hex', 'latin1', 'base64']
+const encodings = ['utf8', 'ascii', 'latin1']
+let algo = 'sha256'
+let digest = 'hex'
+let encoding = 'utf8'
+let showInput = false
+
+const man = `
+Usage: zettsum [OPTIONS]... [STRINGS]...
+Generates checksums for each STRING individually.
+
+If no STRINGS are provided, streams standard input.
+
+  -a {a}, --algorithm {a} set hashing algorithm to {a}, default is ${algo}
+                          options: see -A
+
+  -H, --hashes            display all available hashing algorithms and exit
+
+  -d {f}, --digest {f}    set digest format to {f}, default is ${digest}
+                          options: ${digests.join(', ')}
+
+  -e {f}, --encoding {f}  set encoding to {f}, default is ${encoding}
+                          options: ${encodings.join(', ')}
+
+  -i, --input             print input along with hash, seperated by tab
+                          900150983cd24fb0d6963f7d28e17f72\tabc
+
+  -h, --help              display this help and exit
+
+  -v, --version           display version information and exit
+
+Node's crypto module is used:  https://nodejs.org/api/crypto.html
+`
+
+function help() {
+  console.log(man.trim())
+  return process.exit(0)
+}
+
+const input = []
+for(let i = 2; i < process.argv.length; i += 1) {
+  const arg = process.argv[i]
+  const cmd = input[input.length - 1]
+
+  if(cmd === '-a' || cmd === '--algorithm') {
+    algo = arg
+    input.pop()
+  } else if(cmd === '-d' || cmd === '--digest') {
+    digest = arg
+    input.pop()
+  } else if(cmd === '-e' || cmd === '--encoding') {
+    encoding = arg
+    input.pop()
+  } else if(arg === '-h' || arg === '--help') {
+    help()
+  } else if(arg === '-v' || arg === '--version') {
+    console.log(config.version)
+    return process.exit(0)
+  } else if(arg === '-H' || arg === '--hashes') {
+    console.log(crypto.getHashes().join('\n'))
+    return process.exit(0)
+  } else if(arg === '-i' || arg === '--input') {
+    showInput = true
+  } else {
+    input.push(arg)
+  }
+}
+
+if(!crypto.getHashes().includes(algo)) {
+  process.stderr.write(`Unsupported hashing algorithm: ${algo}`)
+  process.exit(1)
+}
+if(!digests.includes(digest)) {
+  process.stderr.write(`Unsupported digest format: ${digest}`)
+  process.exit(1)
+}
+if(!encodings.includes(encoding)) {
+  process.stderr.write(`Unsupported encoding format: ${encoding}`)
+  process.exit(1)
+}
+
+function hash(str) {
+  var hashed = crypto.createHash(algo).update(str, encoding).digest(digest)
+  if(showInput) hashed += '\t' + str
+  return hashed
+}
+
+if(input.length) {
+  console.log(input.map(hash).join('\n'))
+  process.exit(0)
+}
+
+process.on('SIGINT', () => process.exit(0))
+process.stdout.on('error', process.exit)
+process.stdin.on('end', () => process.exit(0))
+process.stdin.setEncoding(encoding)
+
+let remainder = null
+process.stdin.on('data', data => {
+})
+const pipe = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: false,
+})

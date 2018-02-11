@@ -1,0 +1,46 @@
+.TH zettsum 1 "February 2018" "version 1.0"
+
+.SH NAME
+zettsum - generate checksums for lines
+
+.SH SYNOPSIS
+zettsum [OPTIONS]... [STRINGS]...
+
+<pipeable> | zettsum [OPTIONS]...
+
+.SH DESCRIPTION
+Generates checksums for each STRING individually.
+
+If no STRINGS are provided, streams standard input.
+
+.B -a {algorithm}, --algorithm {algorithm}
+    Set hashing algorithm to {algorithm}.
+    Defaults to sha256.
+    For available options, see -H
+
+.B -H, --hashes
+    List all hashing algorithms and exit.
+
+.B -d {format}, --digest {format}
+    Set digest method to {format}.
+    Defaults to "hex".
+    Available options are: "hex", "latin1", and "base64".
+
+.B -e {format}, --encoding {format}
+    Sets encoding to {format}.
+    Defaults to "utf8".
+    Available options are: "utf8", "ascii", and "latin1".
+
+.B -i, --input
+    Prints input with each hash, seperated by tab.
+    Example:
+       900150983cd24fb0d6963f7d28e17f7	abc
+
+.B -h, --help
+    Display a help file and exit.
+
+.B -v, --version
+    Display version information and exit.
+
+.SH AUTHOR
+Written by Tony A. Saele and Oystein O. Olsen
