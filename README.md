@@ -1,7 +1,5 @@
 # zettsum
-> Generate checksums line-by-line
-
-## Usage
+> Generate checksums line-by-line for strings and buffer.
 
 ## Installation
 Ensure you have [Node.js](https://nodejs.org) version 6 or higher installed. Then run the following:
@@ -9,6 +7,8 @@ Ensure you have [Node.js](https://nodejs.org) version 6 or higher installed. The
 ```js
     npm install --global zettsum
 ```
+
+## Usage
 
 ```sh
     $ zettsum --help
